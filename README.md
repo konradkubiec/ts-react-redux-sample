@@ -42,7 +42,17 @@ Please read [architecture.md]()  to see what I was striving to do.
      ```
      TODO: refactor to match the two scenarios: Drizzle ORM or direct PostgreSQL (code in `express/`)
 
-4. Start the backend server:
+4. Commands:
+```
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:e2e": "cypress run",
+    "test:e2e:open": "cypress open"
+```
 
 ## Features
 
