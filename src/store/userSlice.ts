@@ -1,4 +1,6 @@
 'use client';
+// Implementation variant with Dependency Injection pattern
+
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 
 interface User {
@@ -34,7 +36,7 @@ export const loginUser = createAsyncThunk<
 	string,
 	{ email: string; password: string },
 	{ extra: UserAPI }
->('user/login', async ({ email, password }, { extra }) => {
+>('user/loginUser', async ({ email, password }, { extra }) => {
 	return await extra.login(email, password);
 });
 
@@ -42,7 +44,7 @@ export const fetchUserDetails = createAsyncThunk<
 	{ id: number; name: string; email: string },
 	void,
 	{ extra: UserAPI; state: { user: UserState } }
->('user/fetchDetails', async (_, { getState, extra }) => {
+>('user/fetchUserDetails', async (_, { getState, extra }) => {
 	const { user } = getState();
 	if (!user.token) throw new Error('No token available');
 	return await extra.fetchUserDetails(user.token);

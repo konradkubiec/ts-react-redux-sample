@@ -1,4 +1,7 @@
 'use client';
+// Implementation variant with Dependency Injection pattern
+
+
 import {describe, expect, test, it, jest, beforeEach} from '@jest/globals';
 import userReducer, {
 		UserState,
@@ -73,9 +76,9 @@ import { kStringMaxLength } from 'buffer';
 				const userDetails = { id: 1, name: 'Test User', email: 'test@example.com' };
 				mockUserAPI.fetchUserDetails.mockResolvedValue(userDetails);
 	
-				// store.dispatch({ type: 'user/loginUser/fulfilled', payload: 'fake-token' });
+				store.dispatch({ type: 'user/loginUser/fulfilled', payload: 'fake-token' });
 				await store.dispatch(fetchUserDetails());
-	
+
 				const state = store.getState().user;
 				expect(state.user).toEqual(userDetails);
 				expect(state.status).toBe('succeeded');

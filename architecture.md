@@ -179,30 +179,65 @@ import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
 
 const users = pgTable('users', {
-  id: serial('id').primaryKey(),
-  name: text('name').notNull(),
-  email: text('email').notNull(),
-  password: text('password').nptNull(),
-  role: text('role', { enum: ['admin', 'user'] }).notNull(),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-});
-
-
-// Schema for selecting a user
-export const selectUserSchema = createSelectSchema(users);
-
-// Refining the fields in schema for inserting a user
-export const insertUserSchema = createInsertSchema(users, {
-  id: (schema) => schema.id.positive(),
-  name: (schema) => schema.name.string().min(2).max(20),
-  email: (schema) => schema.email.email().max(20),
-  password: (schema) => schema.password.string().min(6).max(20),
-  role: z.string(),
-});
-
-export type UserInput = z.infer<typeof insertUserSchema>;
-export type UserOutput = z.infer<typeof selectUserSchema>;
+    id: serial('id').primaryKey(),
+    name: varchar('name', { length: 20 }).notNull(),
+    email: varchar('email', { length: 20 }).notNull(),
+    password: varchar('password', { length: 20 }).notNull(),
+    role: varchar('role', { enum: ['admin', 'user'] }).notNull().default('user'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    tokens: text('tokens').default('[]'), 
+  });
+  
+  
+  // Schema for selecting a user
+  export const selectUserSchema = createSelectSchema(users, {
+      password: schema => schema.password != null ? schema.password
+          .transform( email => createHash('sha256').update(email + 'salt').digest('base64').slice(0, 20))
+          : schema.password,
+  })
+  
+  // Refining the fields in schema for inserting a user
+  export const insertUserSchema = createInsertSchema(users, {
+    id: (schema) => schema.id.positive(),
+    name: (schema) => schema.name
+      .min(2, 'Name must be at least 2 characters'),
+    email: (schema) => schema.email.email()
+      .max(20,  'Email must be no longer than 20 characters'),
+    password: (schema) => schema.password
+      .min(6, 'Password must be at least 6 characters')
+      .max(20, 'Password must be no longer than 20 characters')
+      .transform( email => createHash('sha256').update(email + 'salt').digest('base64').slice(0, 20)),
+  });
+  
+  export type UserInput = z.infer<typeof insertUserSchema>;
+  export type UserOutput = z.infer<typeof selectUserSchema>;
 ```
+Model for Frontend
+```TypeScript
+import { createHash } from 'crypto';
+import { z } from 'zod';
+import {insertUserSchema,selectUserSchema }
+
+export const registerFormUserSchema = insertUserSchema
+    .omit({ id: true })
+    .extend({ confirmPassword: z.string()
+        .min(6, 'Password must be at least 6 characters')
+        .max(20, 'Password must be no longer than 20 characters')})
+    .superRefine(({ password, confirmPassword }, ctx) => {
+        if(password != confirmPassword){
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "The passwords did not match",
+                path: ['confirmPassword']
+            });
+        }
+    });
+
+export const selectSelfSchema = selectUserSchema
+    .pick({ name: true, email: true, password: true});
+
+```
+
 # Progress
 - ✔ `architecture.md` seed
 - ✔ Dev Setup via:
@@ -223,3 +258,11 @@ export type UserOutput = z.infer<typeof selectUserSchema>;
 - ✔ TDD:
     - `pnpm add @reduxjs/toolkit`
     - `pnpm add react-redux`
+    - `pnpm add axios`
+    - `pnpm add zod`
+    - `pnpm add drizzle-zod`
+    - `pnpm add drizzle-orm`
+    - `pnpm add drizzle-orm pg`
+    - `pnpm add -D drizzle-kit @types/pg`
+    - `pnpm add drizzle-orm @electric-sql/pglite`
+
